@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COALESCER · simulador 3D</title>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>
+  :root { --navy:#0B1F33; --or:#F28C28; --cy:#4fc3f7; --gr:#4cd97b; --am:#e3b341; --rd:#ff5a4d; --mut:#9fb3c8; --bg:#07182a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:#050c14; color:#f2f6fa; font:16px/1.4 "Segoe UI",system-ui,sans-serif; overflow:hidden; user-select:none; }
+  #c { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  .hud { position:fixed; inset:0; pointer-events:none; }
+  .badge { position:absolute; left:18px; top:16px; display:flex; align-items:center; gap:12px; background:rgba(7,24,42,.72); border:1px solid #27476a; border-radius:16px; padding:8px 16px 8px 12px; backdrop-filter:blur(6px); }
+  .badge img { height:40px; } .badge b { letter-spacing:.14em; font-size:1.05rem; display:block; } .badge small { color:var(--am); font-weight:700; letter-spacing:.08em; font-size:.68rem; }
+  #missao { position:absolute; right:18px; top:16px; width:300px; font-size:.85rem; background:rgba(7,24,42,.72); border:1px solid #27476a; border-radius:16px; padding:12px 16px; backdrop-filter:blur(6px); }
+  #missao h3 { margin:0 0 6px; font-size:.72rem; letter-spacing:.18em; color:var(--or); } #missao li { list-style:none; display:flex; gap:8px; padding:2px 0; font-size:.8rem; color:#cfdbe8; } #missao ul { margin:0; padding:0; }
+  #missao li i { flex:none; width:18px; height:18px; border-radius:50%; border:2px solid #4b6178; margin-top:2px; } #missao li.ok { color:var(--gr); text-decoration:line-through; text-decoration-color:rgba(76,217,123,.5); } #missao li.ok i { background:var(--gr); border-color:var(--gr); }
+  #missao li.now { color:#fff; font-weight:700; } #missao li.now i { border-color:var(--or); animation:p 1.2s infinite; } @keyframes p { 50% { box-shadow:0 0 0 6px rgba(242,140,40,.25); } }
+  #mira { position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%; background:rgba(255,255,255,.7); box-shadow:0 0 0 2px rgba(0,0,0,.3); transition:.2s; } #mira.on { width:18px; height:18px; margin:-9px 0 0 -9px; background:transparent; border:3px solid var(--or); box-shadow:0 0 18px var(--or); }
+  #prompt { position:absolute; left:50%; bottom:130px; transform:translateX(-50%); background:rgba(7,24,42,.85); border:2px solid var(--or); border-radius:16px; padding:10px 22px; font-weight:700; font-size:1.15rem; display:none; box-shadow:0 0 30px rgba(242,140,40,.35); } #prompt kbd { background:var(--or); color:#1a0f00; border-radius:8px; padding:2px 10px; margin-right:8px; font-weight:800; }
+  #dicas { position:absolute; left:50%; bottom:18px; transform:translateX(-50%); display:flex; gap:10px; flex-wrap:wrap; justify-content:center; max-width:94vw; }
+  .dica { background:rgba(7,24,42,.72); border:1px solid #27476a; border-radius:12px; padding:5px 12px; font-size:.84rem; color:#cfdbe8; backdrop-filter:blur(6px); } .dica b { color:var(--or); margin-right:6px; }
+  #toast { position:absolute; left:50%; top:90px; transform:translate(-50%,-20px); background:rgba(7,24,42,.92); border:2px solid var(--gr); border-radius:16px; padding:12px 26px; font-weight:800; font-size:1.2rem; opacity:0; transition:.35s; text-align:center; max-width:80vw; } #toast.show { opacity:1; transform:translate(-50%,0); }
+  #legenda { position:absolute; left:50%; bottom:15%; transform:translateX(-50%); font-size:clamp(1.3rem,2.8vw,2.4rem); font-weight:800; text-align:center; max-width:80vw; text-shadow:0 3px 18px #000; opacity:0; transition:.6s; } #legenda.show { opacity:1; }
+  #estado { position:absolute; left:18px; top:84px; font-size:.82rem; color:var(--mut); background:rgba(7,24,42,.6); border-radius:10px; padding:4px 12px; }
+  .tela { position:fixed; inset:0; display:none; z-index:10; } .tela.show { display:flex; }
+  #titulo { background:radial-gradient(1100px 700px at 70% 20%,#16456f 0%,transparent 60%),linear-gradient(160deg,#0d2a47,#050c14); align-items:center; justify-content:center; text-align:center; flex-direction:column; gap:14px; }
+  #titulo img.l { width:min(220px,40vw); filter:drop-shadow(0 20px 50px rgba(0,0,0,.6)); animation:fl 5s ease-in-out infinite; } @keyframes fl { 50% { transform:translateY(-10px); } }
+  #titulo h1 { margin:0; font-size:clamp(2.6rem,8vw,6rem); letter-spacing:.1em; font-weight:800; } #titulo h2 { margin:0; font-size:clamp(1rem,2.4vw,1.6rem); color:var(--or); font-weight:700; }
+  #titulo p { color:var(--mut); max-width:46rem; margin:0; } .start { margin-top:18px; background:var(--or); color:#1a0f00; padding:16px 36px; border-radius:99px; font-weight:800; font-size:1.3rem; box-shadow:0 14px 40px rgba(242,140,40,.4); animation:pu 1.6s infinite; } @keyframes pu { 50% { transform:scale(1.04); } }
+  .aviso { border-left:4px solid var(--am); background:rgba(227,179,65,.1); color:#e8d28a; padding:8px 14px; border-radius:0 10px 10px 0; font-size:.88rem; max-width:44rem; text-align:left; }
+  #ov { background:#050c14; flex-direction:column; } #ovtabs { display:flex; gap:8px; padding:8px 14px; background:#081b2e; align-items:center; } #ovtabs span { padding:6px 14px; border-radius:99px; border:1px solid #27476a; font-weight:700; font-size:.9rem; color:#cfdbe8; } #ovtabs span.on { background:var(--or); color:#1a0f00; border-color:var(--or); } #ovtabs kbd, #ovleg kbd { background:#1b3a58; border-radius:6px; padding:1px 8px; margin:0 6px; font-weight:800; }
+  #ovwrap { flex:1; display:grid; place-items:center; min-height:0; padding:4px; } #ovc { max-width:100%; max-height:100%; border-radius:14px; box-shadow:0 0 60px rgba(0,0,0,.7); }
+  #ovleg { padding:8px 14px; background:#081b2e; color:#cfdbe8; font-size:.9rem; text-align:center; }
+  #pausa { background:rgba(5,12,20,.92); align-items:center; justify-content:center; } #pausa .cx { background:#0e2740; border:1px solid #27476a; border-radius:22px; padding:26px 34px; max-width:760px; width:92vw; max-height:92vh; overflow:auto; } #pausa h2 { margin:0 0 12px; color:var(--or); } #pausa table { width:100%; border-collapse:collapse; } #pausa td { padding:5px 8px; border-bottom:1px solid #1b3a58; } #pausa td:first-child { font-weight:800; width:34%; color:#fff; } #pausa td:last-child { color:var(--mut); }
+  .mini { color:var(--mut); font-size:.82rem; margin-top:10px; }
+  #tcap { position:fixed; left:50%; bottom:5vh; transform:translate(-50%,20px); z-index:30; width:min(1100px,92vw); text-align:center; opacity:0; transition:.5s; pointer-events:none; } #tcap.show { opacity:1; transform:translate(-50%,0); }
+  #tcaptxt { font-size:clamp(1.15rem,2.4vw,2rem); font-weight:800; text-shadow:0 3px 18px #000,0 0 6px #000; background:rgba(7,24,42,.78); border:1px solid #27476a; border-radius:18px; padding:14px 24px; display:inline-block; }
+  #tbarw { height:6px; background:rgba(255,255,255,.15); border-radius:9px; margin:12px auto 0; width:60%; overflow:hidden; } #tbar { height:100%; width:0; background:var(--or); } #thint { margin-top:8px; font-size:.85rem; color:var(--mut); text-shadow:0 2px 8px #000; }
+  #flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:40; } #flash.go { animation:fl .5s ease-out; } @keyframes fl { 0% { opacity:.85; } 100% { opacity:0; } }
+  .lang { position:absolute; top:18px; right:22px; display:flex; gap:6px; font-weight:800; } .lang span { padding:6px 12px; border:1px solid #27476a; border-radius:99px; cursor:pointer; color:#cfdbe8; background:rgba(7,24,42,.6); } .lang span:hover { border-color:var(--or); color:#fff; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud" id="hud">
+  <div class="badge"><img src="logo_branco.svg" alt=""><div><b>COALESCER</b><small data-i18n>SIMULAÇÃO · HIPÓTESE DO PROJECTO</small></div></div>
+  <div id="estado"></div>
+  <div id="missao"><h3 data-i18n>MISSÃO</h3><ul id="mlista"></ul></div>
+  <div id="mira"></div>
+  <div id="prompt"></div>
+  <div id="toast"></div>
+  <div id="legenda"></div>
+  <div id="dicas"></div>
+</div>
+<div id="tcap"><div id="tcaptxt"></div><div id="tbarw"><div id="tbar"></div></div><div id="thint"></div></div>
+<div id="flash"></div>
+<div class="tela" id="ov"><div id="ovtabs"></div><div id="ovwrap"><canvas id="ovc"></canvas></div><div id="ovleg"></div></div>
+<div class="tela" id="pausa"><div class="cx" id="pcx"></div></div>
+<div class="tela show" id="titulo">
+  <div class="lang"><span data-l="pt">PT</span><span data-l="en">EN</span></div>
+  <img class="l" src="logo_branco.svg" alt="">
+  <h1>COALESCER</h1><h2 data-i18n>SIMULADOR 3D · entra no vaso separador</h2>
+  <p data-i18n>Um jogo em primeira pessoa para ver a ideia do projecto: como um campo sonoro poderia juntar gotículas de óleo e que equipamentos poderiam diminuir.</p>
+  <div class="aviso" data-i18n>É uma <b>simulação</b> de uma hipótese. O projecto ainda não tem resultados experimentais, e nada aqui é medição.</div>
+  <div class="start" id="startb" data-i18n>Carrega ✕ (comando) ou clica para começar</div>
+  <p class="mini" id="padinfo" data-i18n>Liga o comando PS4 por cabo USB. Teclado e rato também funcionam. Carrega em K para configurar os botões do comando.</p>
+  <p class="mini" data-i18n>Touchpad ou G: apresentação guiada · L: idioma</p>
+</div>
+<script src="lib/three.min.js"></script>
+<script src="lib/Pass.js"></script><script src="lib/CopyShader.js"></script><script src="lib/LuminosityHighPassShader.js"></script><script src="lib/GammaCorrectionShader.js"></script>
+<script src="lib/EffectComposer.js"></script><script src="lib/RenderPass.js"></script><script src="lib/ShaderPass.js"></script><script src="lib/UnrealBloomPass.js"></script>
+<script src="js/i18n.js"></script><script src="js/modelo.js"></script><script src="js/conteudo.js"></script><script src="js/fisica.js"></script><script src="js/sim.js"></script>
+<script src="js/world.js"></script><script src="js/paineis.js"></script><script src="js/maos.js"></script><script src="js/entrada.js"></script><script src="js/audio.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
