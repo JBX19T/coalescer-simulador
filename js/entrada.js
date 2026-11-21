@@ -63,6 +63,7 @@
     }
     const ml = 0.0022; s.mlx = I.mdx * ml + tdx; s.mly = I.mdy * ml + tdy; I.mdx = 0; I.mdy = 0;
     for (const a in held) { if (held[a] && !I._prev[a]) s.pressed[a] = true; I._prev[a] = held[a]; }
+    for (const a in I._prev) if (!(a in held)) I._prev[a] = false;   // acção que já não está em "held" = largada (senão o toque seguinte nunca contava como novo)
     return s;
   };
   // ---- captura de um botão/eixo para o assistente de configuração
