@@ -4,10 +4,11 @@
   const Q = new URLSearchParams(location.search);
   const LS = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) { } } };
   const renderer = new T.WebGLRenderer({ canvas: $('c'), antialias: true, powerPreference: 'high-performance' });
-  let pr = Math.min(devicePixelRatio || 1, 1.25); renderer.setPixelRatio(pr); renderer.outputEncoding = T.sRGBEncoding;
+  const TACTIL = matchMedia('(pointer:coarse)').matches;      // telemóvel/tablet: começa com menos carga (o governador ainda ajusta)
+  let pr = Math.min(devicePixelRatio || 1, TACTIL ? 1 : 1.25); renderer.setPixelRatio(pr); renderer.outputEncoding = T.sRGBEncoding;
   const scene = new T.Scene(), camera = new T.PerspectiveCamera(72, 1, 0.05, 90); scene.add(camera);
   let estado = 'titulo';
-  const sim = new Sim(3600); sim.setAct(2600);
+  const sim = new Sim(3600); sim.setAct(matchMedia('(pointer:coarse)').matches ? 1800 : 2600);
   const DEF = { f: 1.7e6, p0: 296e3, Q: 5, T0: 20 };
   const S = { sim, p: Object.assign({}, DEF), d: null, t: 0, sel: 1, q: 0, cen: 0, lang: LS.get('coalescer_lang') === 'en' ? 'en' : 'pt', mem: { on: null, off: null }, compare: false };
   I18N.lang = S.lang; const tr = (s) => I18N.t(s);
@@ -19,12 +20,12 @@
 
   const ovc = $('ovc'), ovx = ovc.getContext('2d');
   // ---- pós-processamento (brilho)
-  let composer = null, bloom = null, useBloom = Q.get('bloom') !== '0';
+  let composer = null, bloom = null, useBloom = Q.get('bloom') !== '0' && !matchMedia('(pointer:coarse)').matches;
   function buildComposer() {
     const w = innerWidth, h = innerHeight; composer = new T.EffectComposer(renderer); composer.setPixelRatio(pr); composer.setSize(w, h);
     composer.addPass(new T.RenderPass(scene, camera)); bloom = new T.UnrealBloomPass(new T.Vector2(w / 2, h / 2), 0.5, 0.55, 0.88); composer.addPass(bloom); composer.addPass(new T.ShaderPass(T.GammaCorrectionShader));
   }
-  function resize() { const w = innerWidth, h = innerHeight; renderer.setPixelRatio(pr); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); O.drops.mat.uniforms.uScale.value = h * pr / (2 * Math.tan(camera.fov * Math.PI / 360)); if (composer) { composer.setPixelRatio(pr); composer.setSize(w, h); bloom.setSize(w / 2, h / 2); } sizeOv(); }
+  function resize() { const w = innerWidth, h = innerHeight; renderer.setPixelRatio(pr); renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w / h < 1 ? 88 : 72; camera.updateProjectionMatrix(); O.drops.mat.uniforms.uScale.value = h * pr / (2 * Math.tan(camera.fov * Math.PI / 360)); if (composer) { composer.setPixelRatio(pr); composer.setSize(w, h); bloom.setSize(w / 2, h / 2); } sizeOv(); }
   if (useBloom) buildComposer(); addEventListener('resize', resize); resize();
 
   // ---- estado
@@ -51,7 +52,7 @@
   ];
   function missao() {
     let first = true; const html = MISS.map((m) => { const ok = m.ok(), cls = ok ? 'ok' : (first ? 'now' : ''); if (!ok) first = false; return '<li class="' + cls + '"><i></i><span>' + tr(m.t) + '</span></li>'; }).join('');
-    if (missao._h !== html) { $('mlista').innerHTML = html; missao._h = html; }
+    if (missao._h !== html) { $('mlista').innerHTML = html; missao._h = html; $('mcont').textContent = MISS.filter((m) => m.ok()).length + '/' + MISS.length; }
     if (!M.won && MISS.every((m) => m.ok())) { M.won = true; Som.win(); toast('Missão cumprida! Experimenta o cenário «Versão A» nos Parâmetros e vê o que acontece.', 'var(--or)', 6000); }
   }
 
@@ -85,7 +86,10 @@
   function toggleCompare() { S.compare = !S.compare; O.setCompare(S.compare); M.equipamentos = M.equipamentos || S.compare; Som.ok(); toast(S.compare ? 'Modo comparação: equipamentos convencionais a vermelho' : 'Modo comparação desligado', 'var(--rd)', 2200); }
 
   // ---- painéis em tela cheia
-  function sizeOv() { const w = innerWidth - 8, h = innerHeight - (estado === 'tour' ? 250 : 90); let cw = w, ch = cw * 9 / 16; if (ch > h) { ch = h; cw = ch * 16 / 9; } ovc.width = Math.round(cw * Math.min(devicePixelRatio || 1, 1.25)); ovc.height = Math.round(ch * Math.min(devicePixelRatio || 1, 1.25)); ovc.style.width = cw + 'px'; ovc.style.height = ch + 'px'; }
+  function sizeOv() {
+    const tq = E.toque && E.toque.on, land = innerWidth > innerHeight * 1.05;
+    // táctil: sem a legenda do teclado; na horizontal deixa espaço dos lados para a cruz e os botões
+    const w = innerWidth - 8 - (tq && land && estado !== 'tour' ? 340 : 0), h = innerHeight - (estado === 'tour' ? (tq ? 150 : 250) : (tq ? 54 : 90)); let cw = w, ch = cw * 9 / 16; if (ch > h) { ch = h; cw = ch * 16 / 9; } ovc.width = Math.round(cw * Math.min(devicePixelRatio || 1, 1.25)); ovc.height = Math.round(ch * Math.min(devicePixelRatio || 1, 1.25)); ovc.style.width = cw + 'px'; ovc.style.height = ch + 'px'; }
   function legendaOv() {
     const pad = padMode(), k = (a, b) => '<kbd>' + (pad ? a : b) + '</kbd>';
     $('ovleg').innerHTML = k('L1', 'Z') + '/' + k('R1', 'C') + ' ' + tr('painel') + ' · ' + k('↑↓', '↑↓') + ' ' + tr('escolher') + ' · ' + k('◀▶', '←→') + ' ' + tr('ajustar') + ' · ' + k('□', 'R') + ' ' + tr('liga/desliga método') + ' · ' + k('Share', 'F2') + ' ' + tr('foto') + ' · ' + k('○', 'Backspace') + ' ' + tr('fechar');
@@ -102,6 +106,13 @@
     if (show) { estado = 'pausa'; $('pausa').classList.add('show'); if (document.pointerLockElement) document.exitPointerLock(); renderPausa(); } else { $('pausa').classList.remove('show'); estado = 'livre'; dicasLivre(); }
   }
   function renderPausa() {
+    if (E.toque && E.toque.on) {
+      const lt = [['Joystick (esquerda)', 'andar · arrasta mais para correr'], ['Arrastar à direita', 'olhar à volta'], ['✕', 'abrir o painel que estás a olhar · confirmar'], ['□', 'ligar / desligar o método acústico'], ['△', 'tirar / guardar o tablet'], ['○', 'fechar / voltar'], ['L1 / R1', 'painel anterior / seguinte'], ['◀ ▶ ▲ ▼', 'escolher e ajustar valores'], ['▶', 'apresentação guiada'], ['◉', 'fotografia (guarda uma imagem)']];
+      $('pcx').innerHTML = '<h2>' + tr('Ajuda e opções') + '</h2><table>' + lt.map((r) => '<tr><td>' + tr(r[0]) + '</td><td>' + tr(r[1]) + '</td></tr>').join('') + '</table>'
+        + '<p class="mini">' + tr('idioma') + ': ' + S.lang.toUpperCase() + ' · ' + tr('som') + ' ' + tr(Som.on ? 'ligado' : 'desligado') + '</p>'
+        + '<div class="aviso" style="margin-top:8px">' + tr('Simulação de uma hipótese. Sem resultados experimentais. As razões de força vêm do modelo da Fase 4; a coalescência é esquemática.') + '</div>';
+      return;
+    }
     const linhas = [['Stick esquerdo', 'andar'], ['Stick direito', 'olhar à volta'], ['R2 (ou Shift)', 'correr'], ['✕ (E)', 'abrir o painel que estás a olhar · confirmar'], ['○ (Backspace)', 'fechar / voltar'], ['□ (R)', 'ligar / desligar o método acústico'], ['△ (T)', 'tirar / guardar o tablet'], ['L1 / R1 (Z / C)', 'painel anterior / seguinte'], ['Setas', 'escolher e ajustar valores'], ['Touchpad (G)', 'apresentação guiada'], ['Share (F2)', 'fotografia (guarda uma imagem)'], ['Options (H)', 'esta janela']];
     $('pcx').innerHTML = '<h2>' + tr('Ajuda e opções') + '</h2><table>' + linhas.map((r) => '<tr><td>' + r[0] + '</td><td>' + tr(r[1]) + '</td></tr>').join('') + '</table>'
       + '<p class="mini"><b>[K]</b> ' + tr('configurar o comando (carregar em cada botão)') + ' · <b>[Del]</b> ' + tr('repor o mapa original') + ' · ' + tr('mapa') + ': ' + tr(E.personalizado() ? 'personalizado' : 'original') + '</p>'
@@ -187,7 +198,7 @@
   function fimIntro() { estado = 'livre'; $('legenda').classList.remove('show'); $('missao').style.display = ''; dicasLivre(); toast('Aproxima-te de um painel (✕) ou carrega □ para ligar o método', 'var(--or)', 4200); }
   function comecar() { if (estado !== 'titulo') return; Som.init(); if (Q.get('direto') === '1') { estado = 'livre'; $('titulo').classList.remove('show'); $('missao').style.display = ''; dicasLivre(); return; } iniciarIntro(); }
   $('startb').addEventListener('click', comecar); $('titulo').addEventListener('click', (e) => { if (!e.target.closest('.lang')) comecar(); });
-  $('c').addEventListener('click', () => { if (estado === 'livre' && !E.usingPad && !document.pointerLockElement && $('c').requestPointerLock) $('c').requestPointerLock(); Som.init(); });
+  $('c').addEventListener('click', () => { if (estado === 'livre' && !E.usingPad && !E.toque.on && !document.pointerLockElement && $('c').requestPointerLock) $('c').requestPointerLock(); Som.init(); });
   E.onPad = (on, id) => { toast(on ? 'Comando ligado' : 'Comando desligado', on ? 'var(--gr)' : 'var(--rd)', 2200); const pi = $('padinfo'); if (pi) pi.textContent = on ? tr('Comando detectado: ') + id : tr('Comando desligado.'); if (estado === 'livre') dicasLivre(); };
 
   // ---- apresentação guiada (também usada pelo modo quiosque)
@@ -196,7 +207,7 @@
   function startTour(kiosk) {
     if (estado === 'painel') hideOv(); if (estado === 'pausa') $('pausa').classList.remove('show'); resetEstado(); estado = 'tour'; tour.i = -1; tour.t = 0; tour.kiosk = !!kiosk; tour.el = 0; Som.init();
     $('titulo').classList.remove('show'); $('hud').style.display = 'none'; hands.group.visible = false; tour.from = { p: X.TOUR[0].cam[0].slice(), t: X.TOUR[0].cam[1].slice() }; tour.to = tour.from; $('tcap').classList.add('show');
-    $('thint').textContent = tr(padMode() ? 'Carrega em qualquer botão para sair' : 'Prime qualquer tecla para sair');
+    $('thint').textContent = tr(E.toque.on ? 'Toca no ecrã para sair' : padMode() ? 'Carrega em qualquer botão para sair' : 'Prime qualquer tecla para sair');
   }
   function acaoTour(fn) {
     if (fn === 'reset') resetEstado(); else if (fn === 'on') ligar(true); else if (fn === 'cenA') { S.compare = false; O.setCompare(false); applyCenario(1); } else if (fn === 'cenB') applyCenario(2); else if (fn === 'calor') applyCenario(3);
@@ -281,6 +292,7 @@
     requestAnimationFrame(loop);
     const dt = Math.min(0.05, (now - last) / 1000); last = now; S.t += dt; frames++; tf += dt;
     const s = E.poll();
+    if (loop._st !== estado || loop._tb !== tabletUp) { loop._st = estado; loop._tb = tabletUp; document.body.dataset.e = estado; document.body.dataset.t = tabletUp ? '1' : '0'; }
     if (Object.keys(s.pressed).length && E.usingPad && Som.ctx && Som.ctx.state === 'suspended') Som.ctx.resume();
     const kL = kedge('KeyL', '_L'), kQ = kedge('KeyQ', '_Q');
     if (kL && estado !== 'calib') setLang(S.lang === 'pt' ? 'en' : 'pt');
@@ -298,7 +310,7 @@
       const walking = mover(dt, s); camera.position.set(player.x, player.y + (walking ? Math.sin(S.t * (s.run ? 12 : 8)) * 0.025 : 0), player.z); camera.rotation.set(player.pitch, player.yaw, 0, 'YXZ');
       const near = proximo(); const prm = $('prompt'), mira = $('mira');
       if (tabletUp) { prm.style.display = 'none'; mira.classList.remove('on'); }
-      else if (near) { prm.style.display = 'block'; prm.innerHTML = '<kbd>' + (padMode() ? '✕' : 'E') + '</kbd>' + tr(NOMES[near.id]); mira.classList.add('on'); } else { prm.style.display = 'none'; mira.classList.remove('on'); }
+      else if (near) { prm.style.display = 'block'; prm.innerHTML = '<kbd>' + (padMode() || E.toque.on ? '✕' : 'E') + '</kbd>' + tr(NOMES[near.id]); mira.classList.add('on'); } else { prm.style.display = 'none'; mira.classList.remove('on'); }
       hands.update(dt, walking, tabletUp, !!near && !tabletUp, S.t);
       if (s.pressed.x) toggleMethod();
       if (s.pressed.y) { tabletUp = !tabletUp; Som.ok(); if (tabletUp) tTab = 1; }
@@ -348,7 +360,7 @@
     sim.step(dt);
     World.update(O, sim, S.t, dt, sim.R); O.updateCompare(dt);
     ecras(dt, frames < 3);
-    if (S.t - (loop._m || 0) > 0.25) { loop._m = S.t; missao(); }
+    if (missao._h == null || S.t - (loop._m || 0) > 0.25) { loop._m = S.t; missao(); }
     if (S.t - (loop._e || 0) > 0.25) { loop._e = S.t; $('estado').textContent = F.fmtF(S.p.f) + ' · ×' + F.fmt(S.d.R, S.d.R < 10 ? 2 : 1) + ' · ' + tr(sim.onTarget > 0.5 ? 'método ligado' : 'método desligado') + (Q.has('fps') ? ' · ' + Math.round(frames / Math.max(tf, 0.001)) + ' fps · nível ' + nivel : ''); frames = 0; tf = 0; }
     governador(dt);
     if (useBloom && composer) composer.render(); else renderer.render(scene, camera);

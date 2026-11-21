@@ -54,7 +54,14 @@
     for (const a in KEYMAP) for (const code of KEYMAP[a]) if (K[code]) held[a] = true;
     if (I.mouseDown && I.locked) held.a = true;
     NUM.forEach((c, i) => { held['n' + (i + 1)] = !!K[c]; });
-    const ml = 0.0022; s.mlx = I.mdx * ml; s.mly = I.mdy * ml; I.mdx = 0; I.mdy = 0;
+    // ecrã táctil (toque.js): joystick, arrastar para olhar e botões
+    const Tq = I.toque; let tdx = 0, tdy = 0;
+    if (Tq && Tq.on) {
+      if (!kx && !ky && (Tq.mx || Tq.my)) { s.mx = Tq.mx; s.my = Tq.my; } if (Tq.run) s.run = true;
+      for (const a of ACOES) if (Tq.held(a)) held[a] = true;
+      tdx = Tq.dx; tdy = Tq.dy; Tq.dx = 0; Tq.dy = 0; Tq.limpar();
+    }
+    const ml = 0.0022; s.mlx = I.mdx * ml + tdx; s.mly = I.mdy * ml + tdy; I.mdx = 0; I.mdy = 0;
     for (const a in held) { if (held[a] && !I._prev[a]) s.pressed[a] = true; I._prev[a] = held[a]; }
     return s;
   };

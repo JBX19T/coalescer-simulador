@@ -119,6 +119,18 @@
     'Óleo: Crude médio · ρ = 900 kg/m³ · c = 1450 m/s (valores a confirmar)': 'Oil: medium crude · ρ = 900 kg/m³ · c = 1450 m/s (values to be confirmed)'
   });
 
+  // ---------------- ecrã táctil
+  add({
+    'Toca para começar': 'Tap to start', 'Toca no ecrã para sair': 'Tap the screen to exit',
+    'Joystick à esquerda para andar · arrasta à direita para olhar · botões à direita. Melhor com o telemóvel na horizontal.': 'Joystick on the left to walk · drag on the right to look · buttons on the right. Best with the phone in landscape.',
+    'Roda o telemóvel para a horizontal': 'Rotate your phone to landscape',
+    'fechar': 'close', 'saltar': 'skip', 'continuar': 'continue', 'idioma': 'language', 'som': 'sound', 'ecrã inteiro': 'full screen',
+    'Joystick (esquerda)': 'Joystick (left)', 'andar · arrasta mais para correr': 'walk · push further to run', 'Arrastar à direita': 'Drag on the right', 'olhar à volta': 'look around',
+    'abrir o painel que estás a olhar · confirmar': 'open the panel you are looking at · confirm', 'ligar / desligar o método acústico': 'switch the acoustic method on / off', 'tirar / guardar o tablet': 'take out / put away the tablet',
+    'fechar / voltar': 'close / go back', 'painel anterior / seguinte': 'previous / next panel', 'escolher e ajustar valores': 'choose and adjust values', 'apresentação guiada': 'guided presentation', 'fotografia (guarda uma imagem)': 'photo (saves an image)',
+    'Ajuda e opções': 'Help and options', 'ligado': 'on', 'desligado': 'off'
+  });
+
   // ---------------- regras para textos com números
   const R = I.R, rr = (re, to) => R.push([re, to]);
   rr(/^D50 à saída (.+) \(entrada ≈ 9 µm\)$/, 'D50 at outlet $1 (inlet ≈ 9 µm)');
