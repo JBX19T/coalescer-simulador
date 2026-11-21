@@ -4,11 +4,11 @@
   const Q = new URLSearchParams(location.search);
   const LS = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) { } } };
   const renderer = new T.WebGLRenderer({ canvas: $('c'), antialias: true, powerPreference: 'high-performance' });
-  const TACTIL = matchMedia('(pointer:coarse)').matches;      // telemóvel/tablet: começa com menos carga (o governador ainda ajusta)
+  const TACTIL = !!(window.Entrada && Entrada.toque && Entrada.toque.on);      // telemóvel/tablet: começa com menos carga (o governador ainda ajusta)
   let pr = Math.min(devicePixelRatio || 1, TACTIL ? 1 : 1.25); renderer.setPixelRatio(pr); renderer.outputEncoding = T.sRGBEncoding;
   const scene = new T.Scene(), camera = new T.PerspectiveCamera(72, 1, 0.05, 90); scene.add(camera);
   let estado = 'titulo';
-  const sim = new Sim(3600); sim.setAct(matchMedia('(pointer:coarse)').matches ? 1800 : 2600);
+  const sim = new Sim(3600); sim.setAct(TACTIL ? 1800 : 2600);
   const DEF = { f: 1.7e6, p0: 296e3, Q: 5, T0: 20 };
   const S = { sim, p: Object.assign({}, DEF), d: null, t: 0, sel: 1, q: 0, cen: 0, lang: LS.get('coalescer_lang') === 'en' ? 'en' : 'pt', mem: { on: null, off: null }, compare: false };
   I18N.lang = S.lang; const tr = (s) => I18N.t(s);
@@ -20,7 +20,7 @@
 
   const ovc = $('ovc'), ovx = ovc.getContext('2d');
   // ---- pós-processamento (brilho)
-  let composer = null, bloom = null, useBloom = Q.get('bloom') !== '0' && !matchMedia('(pointer:coarse)').matches;
+  let composer = null, bloom = null, useBloom = Q.get('bloom') !== '0' && !TACTIL;
   function buildComposer() {
     const w = innerWidth, h = innerHeight; composer = new T.EffectComposer(renderer); composer.setPixelRatio(pr); composer.setSize(w, h);
     composer.addPass(new T.RenderPass(scene, camera)); bloom = new T.UnrealBloomPass(new T.Vector2(w / 2, h / 2), 0.5, 0.55, 0.88); composer.addPass(bloom); composer.addPass(new T.ShaderPass(T.GammaCorrectionShader));
@@ -270,13 +270,14 @@
 
   // ---- governador de qualidade: se o computador não aguenta, baixa os efeitos por degraus (nunca volta a subir)
   let nivel = 0, tNivel = 0, fNivel = 0, aquece = 2.5;
-  function aplicarNivel(n) {
+  function aplicarNivel(n, calado) {
     nivel = n;
     if (n >= 1) useBloom = false;
     if (n >= 2) { pr = Math.min(pr, 0.85); sim.setAct(1800); O.lucesExtra.forEach((l) => { l.visible = false; }); }
     if (n >= 3) { pr = 0.65; sim.setAct(1200); }
-    resize(); toast(n >= 3 ? 'Qualidade mínima, para o jogo correr fluido' : 'Qualidade reduzida, para o jogo correr fluido', 'var(--am)', 2600);
+    resize(); if (!calado) toast(n >= 3 ? 'Qualidade mínima, para o jogo correr fluido' : 'Qualidade reduzida, para o jogo correr fluido', 'var(--am)', 2600);
   }
+  if (TACTIL) { aplicarNivel(2, true); aquece = 1.2; }      // telemóvel: arranca já sem luzes extra (a introdução não pode engasgar); o governador ainda desce se for preciso
   function governador(dt) {
     if (document.hidden) { tNivel = 0; fNivel = 0; return; }
     if (aquece > 0) { aquece -= dt; return; }       // ignora os primeiros segundos (compilação de shaders)
@@ -290,9 +291,10 @@
   const kedge = (code, key) => { if (E.keys[code] && !loop[key]) { loop[key] = 1; return true; } if (!E.keys[code]) loop[key] = 0; return false; };
   function loop(now) {
     requestAnimationFrame(loop);
-    const dt = Math.min(0.05, (now - last) / 1000); last = now; S.t += dt; frames++; tf += dt;
+    const dt = Math.min(0.05, (now - last) / 1000), dtr = Math.min(0.3, (now - last) / 1000); last = now; S.t += dt; frames++; tf += dt;
     const s = E.poll();
     if (loop._st !== estado || loop._tb !== tabletUp) { loop._st = estado; loop._tb = tabletUp; document.body.dataset.e = estado; document.body.dataset.t = tabletUp ? '1' : '0'; }
+    if (TACTIL && S.t - (loop._ts || 0) > 0.4) { loop._ts = S.t; const mi = $('missao'); if (mi) document.documentElement.style.setProperty('--ts', Math.ceil(mi.getBoundingClientRect().bottom) + 'px'); }   // base da missão: o resto do HUD vertical empilha por baixo dela
     if (Object.keys(s.pressed).length && E.usingPad && Som.ctx && Som.ctx.state === 'suspended') Som.ctx.resume();
     const kL = kedge('KeyL', '_L'), kQ = kedge('KeyQ', '_Q');
     if (kL && estado !== 'calib') setLang(S.lang === 'pt' ? 'en' : 'pt');
@@ -300,7 +302,7 @@
     else if (estado === 'calib') { passoCalib(dt); eixosVivos(); }
     else if (estado === 'tour') { hands.group.visible = false; if (atividade(s)) fimTour(false); else passoTour(dt); }
     else if (estado === 'intro') {
-      intro.t += dt; camIntro(intro.t); let cap = null; for (const c of CAPS) if (intro.t >= c[0]) cap = c; const lg = $('legenda'); if (cap) { lg.textContent = tr(cap[1]); lg.classList.toggle('show', intro.t < 15.5); }
+      intro.t += dtr; camIntro(intro.t);      // tempo real (não limitado a 0,05 s por fotograma): num telemóvel lento a introdução não se estica let cap = null; for (const c of CAPS) if (intro.t >= c[0]) cap = c; const lg = $('legenda'); if (cap) { lg.textContent = tr(cap[1]); lg.classList.toggle('show', intro.t < 15.5); }
       if (s.pressed.a || s.pressed.b || intro.t > 14.5) fimIntro();
       hands.group.visible = false;
     } else if (estado === 'livre') {

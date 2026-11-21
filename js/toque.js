@@ -22,7 +22,10 @@
     dispatchEvent(new Event('resize'));
   }
   T.ligar = ligar;
-  if (matchMedia('(pointer:coarse)').matches || /[?&]toque\b/.test(location.search)) ligar();   // ?toque força os controlos tácteis (testes)
+  // telemóvel/tablet: ponteiro grosso, OU só há ponteiros grossos, OU o navegador diz que é móvel (alguns navegadores integrados não declaram pointer:coarse)
+  const mm = (q) => { try { return matchMedia(q).matches; } catch (e) { return false; } }, UA = navigator.userAgent || '';
+  const movel = mm('(pointer:coarse)') || (mm('(any-pointer:coarse)') && !mm('(any-pointer:fine)')) || /Android|iPhone|iPad|iPod|Mobile/i.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
+  if (movel || /[?&]toque\b/.test(location.search)) ligar();   // ?toque força os controlos tácteis (testes)
   addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch') ligar(); }, true);
 
   const agora = () => performance.now();

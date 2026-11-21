@@ -72,7 +72,8 @@
   body.touch #titulo { padding-bottom:calc(var(--u)*.72 + 26px); }
   @media (max-height:520px) and (orientation:landscape) { body.touch #titulo { padding-bottom:10px; } #bTitTour { left:10px; top:10px; bottom:auto; transform:none; } }
   body.touch #dicas { display:none; } body.touch .nt { display:none; } body.touch .tt { display:inline; } body.touch p.tt { display:block; }
-  body.touch #prompt { bottom:24px; font-size:.95rem; padding:6px 14px; } body.touch #ovleg { display:none; }
+  body.touch #prompt { bottom:auto; top:calc(50% + 34px); font-size:.95rem; padding:6px 14px; max-width:60vw; text-align:center; } body.touch #ovleg { display:none; }   /* por baixo da mira: nunca fica debaixo dos botões */
+  @media (orientation:landscape) and (max-height:520px) { .tb.pill { height:calc(var(--u)*.6); padding:0 12px; gap:6px; } .tb.pill b { font-size:calc(var(--u)*.26); } .tb.pill small { font-size:calc(var(--u)*.17); } #gm, #gs { bottom:8px; } #bSkip { bottom:8px; } }
   body.touch #ovtabs { overflow-x:auto; white-space:nowrap; } body.touch #ovtabs span { flex:none; }
   body.touch #pausa { align-items:flex-start; padding-top:8px; } body.touch #pausa .cx { max-height:calc(100% - 76px); }
   /* ---- ecrãs pequenos (telemóvel; horizontal ou vertical) */
@@ -81,7 +82,7 @@
     #missao { right:8px; top:8px; width:min(44vw,270px); padding:6px 10px; border-radius:12px; font-size:.7rem; } #missao h3 { font-size:.6rem; margin:0 0 2px; } #missao li { font-size:.72rem; padding:1px 0; } #missao li i { width:14px; height:14px; margin-top:3px; }
     #missao li:not(.now):not(:last-child) { display:none; } #missao li.ok:last-child { display:flex; }
     #estado { left:8px; top:62px; font-size:.64rem; padding:2px 8px; }
-    #toast { top:10px; font-size:.9rem; padding:8px 14px; max-width:min(42vw,380px); border-width:1px; }
+    #toast { top:10px; font-size:.9rem; padding:8px 14px; max-width:min(34vw,320px); border-width:1px; }
     #legenda { font-size:clamp(1rem,3.4vw,1.6rem); bottom:22%; }
     #tcap { bottom:3vh; } #tcaptxt { font-size:clamp(.9rem,3vw,1.3rem); padding:8px 14px; border-radius:14px; } #thint { font-size:.7rem; margin-top:4px; } #tbarw { margin-top:8px; }
     .lang { top:8px; right:10px; } .lang span { padding:4px 10px; font-size:.8rem; }
@@ -91,9 +92,13 @@
     #pausa .cx { padding:12px 16px; border-radius:16px; font-size:.82rem; } #pausa td { padding:3px 6px; } #pausa h2 { font-size:1.1rem; margin-bottom:6px; }
   }
   @media (max-width:600px) {
-    #missao { left:8px; right:8px; top:64px; width:auto; } #estado { left:8px; top:140px; } #rodar { top:184px; } #toast { top:176px; max-width:92vw; }
     #titulo h1 { font-size:2.4rem; } .badge small { font-size:.46rem; }
   }
+  @media (max-width:600px) and (orientation:portrait) {
+    #missao { left:8px; right:8px; top:64px; width:auto; } #estado { left:8px; top:calc(var(--ts,134px) + 6px); } #rodar { top:calc(var(--ts,134px) + 34px); font-size:.72rem; padding:5px 12px; white-space:nowrap; } #toast { top:calc(var(--ts,134px) + 68px); max-width:92vw; }
+  }
+  /* horizontal curto: o aviso vai para baixo ao centro (em cima ficam a insígnia à esquerda e a missão à direita) */
+  @media (orientation:landscape) and (max-height:520px) { #toast { top:auto; bottom:calc(var(--u)*.6 + 22px); max-width:min(56vw,460px); font-size:.8rem; padding:5px 12px; transform:translate(-50%,20px); } body.touch #prompt { top:calc(50% + 14px); } #toast.show { transform:translate(-50%,0); } }
   .lang { position:absolute; top:18px; right:22px; display:flex; gap:6px; font-weight:800; } .lang span { padding:6px 12px; border:1px solid #27476a; border-radius:99px; cursor:pointer; color:#cfdbe8; background:rgba(7,24,42,.6); } .lang span:hover { border-color:var(--or); color:#fff; }
 </style>
 </head>
@@ -129,8 +134,8 @@
 <script src="lib/three.min.js"></script>
 <script src="lib/Pass.js"></script><script src="lib/CopyShader.js"></script><script src="lib/LuminosityHighPassShader.js"></script><script src="lib/GammaCorrectionShader.js"></script>
 <script src="lib/EffectComposer.js"></script><script src="lib/RenderPass.js"></script><script src="lib/ShaderPass.js"></script><script src="lib/UnrealBloomPass.js"></script>
-<script src="js/i18n.js"></script><script src="js/modelo.js"></script><script src="js/conteudo.js"></script><script src="js/fisica.js"></script><script src="js/sim.js"></script>
-<script src="js/world.js"></script><script src="js/paineis.js"></script><script src="js/maos.js"></script><script src="js/entrada.js"></script><script src="js/toque.js"></script><script src="js/audio.js"></script>
-<script src="js/main.js"></script>
+<script src="js/i18n.js?v=20261121b"></script><script src="js/modelo.js?v=20261121b"></script><script src="js/conteudo.js?v=20261121b"></script><script src="js/fisica.js?v=20261121b"></script><script src="js/sim.js?v=20261121b"></script>
+<script src="js/world.js?v=20261121b"></script><script src="js/paineis.js?v=20261121b"></script><script src="js/maos.js?v=20261121b"></script><script src="js/entrada.js?v=20261121b"></script><script src="js/toque.js?v=20261121b"></script><script src="js/audio.js?v=20261121b"></script>
+<script src="js/main.js?v=20261121b"></script>
 </body>
 </html>
