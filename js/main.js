@@ -312,7 +312,8 @@
     else if (estado === 'calib') { passoCalib(dt); eixosVivos(); }
     else if (estado === 'tour') { hands.group.visible = false; if (atividade(s)) fimTour(false); else passoTour(dt); }
     else if (estado === 'intro') {
-      intro.t += dtr; camIntro(intro.t);      // tempo real (não limitado a 0,05 s por fotograma): num telemóvel lento a introdução não se estica let cap = null; for (const c of CAPS) if (intro.t >= c[0]) cap = c; const lg = $('legenda'); if (cap) { lg.textContent = tr(cap[1]); lg.classList.toggle('show', intro.t < 15.5); }
+      intro.t += dtr; camIntro(intro.t);      // tempo real (não limitado a 0,05 s por fotograma): num telemóvel lento a introdução não se estica
+      let cap = null; for (const c of CAPS) if (intro.t >= c[0]) cap = c; const lg = $('legenda'); if (cap) { lg.textContent = tr(cap[1]); lg.classList.toggle('show', intro.t < 15.5); }
       if (s.pressed.a || s.pressed.b || intro.t > 14.5) fimIntro();
       hands.group.visible = false;
     } else if (estado === 'livre') {
