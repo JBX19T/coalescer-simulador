@@ -135,9 +135,14 @@
   <p class="mini nt" id="padinfo" data-i18n>Liga o comando PS4 por cabo USB. Teclado e rato também funcionam. Carrega em K para configurar os botões do comando.</p>
   <p class="mini nt" data-i18n>Touchpad ou G: apresentação guiada · L: idioma</p>
   <p class="mini tt" data-i18n>Joystick à esquerda para andar · arrasta à direita para olhar · botões à direita. Melhor com o telemóvel na horizontal.</p>
+  <p class="mini" id="vers" style="opacity:.4;font-size:.68rem;margin-top:6px">versão 22-11 · c</p>
 </div>
 <div id="toque"></div>
 <div id="rodar" data-i18n>Roda o telemóvel para a horizontal</div>
+<script>
+/* auto-actualização: se existir uma versão mais nova do que esta página, recarrega uma vez com um endereço novo (ultrapassa a cache do navegador) */
+(function () { var B = '20261122c'; try { fetch('versao.txt?' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : B; }).then(function (v) { v = (v || '').trim(); if (v && v !== B && !/[?&]r=/.test(location.search) && !sessionStorage.getItem('rv' + v)) { sessionStorage.setItem('rv' + v, 1); location.replace(location.pathname + (location.search ? location.search + '&' : '?') + 'r=' + v + location.hash); } }).catch(function () { }); } catch (e) { } })();
+</script>
 <script src="lib/three.min.js"></script>
 <script src="lib/Pass.js"></script><script src="lib/CopyShader.js"></script><script src="lib/LuminosityHighPassShader.js"></script><script src="lib/GammaCorrectionShader.js"></script>
 <script src="lib/EffectComposer.js"></script><script src="lib/RenderPass.js"></script><script src="lib/ShaderPass.js"></script><script src="lib/UnrealBloomPass.js"></script>
