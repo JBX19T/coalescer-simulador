@@ -69,6 +69,13 @@
   body.touch[data-e="livre"][data-t="0"] #joydica { display:flex; } body.touch #joy.on ~ #joydica { display:none; }
   #rodar { position:fixed; left:50%; top:150px; transform:translateX(-50%); z-index:26; display:none; background:rgba(7,24,42,.88); border:2px solid var(--or); border-radius:14px; padding:8px 16px; font-weight:800; font-size:.85rem; text-align:center; pointer-events:none; max-width:84vw; }
   body.touch[data-e="livre"] #rodar, body.touch[data-e="painel"] #rodar { display:block; } @media (orientation:landscape) { #rodar { display:none !important; } }
+  /* ampliar o painel (⤢): 1 = ecrã inteiro, 2 = 2× e arrasta-se para ver o resto */
+  #bZ { position:fixed; left:10px; top:46px; bottom:auto; transform:none; } body.touch[data-e="painel"] #bZ { display:flex; } @media (orientation:portrait) { #bZ { left:50%; transform:translateX(-50%); } }
+  body[data-z="1"] #bZ, body[data-z="2"] #bZ { left:10px; top:auto; bottom:10px; transform:none; }
+  @media (orientation:portrait) { body.touch[data-e="painel"] #rodar { display:none !important; } body.touch[data-z="0"] #ovwrap { place-items:start center; padding-top:40px; } body.touch[data-z="0"] #bZ { top:calc(84px + 56.25vw); left:50%; transform:translateX(-50%); } }   /* vertical: painel no topo, longe da cruz e dos botões */
+  body.touch[data-e="painel"][data-z="1"] .tb:not(#bZ):not(#bB), body.touch[data-e="painel"][data-z="2"] .tb:not(#bZ):not(#bB) { display:none !important; }
+  body[data-z="1"] #ovtabs, body[data-z="2"] #ovtabs { display:none !important; }
+  body[data-z="1"] #ovwrap, body[data-z="2"] #ovwrap { padding:0; } body[data-z="2"] #ovwrap { display:block; overflow:auto; -webkit-overflow-scrolling:touch; } body[data-z="2"] #ovc { display:block; max-width:none; max-height:none; border-radius:0; }
   body.touch #titulo { padding-bottom:calc(var(--u)*.72 + 26px); }
   @media (max-height:520px) and (orientation:landscape) { body.touch #titulo { padding-bottom:10px; } #bTitTour { left:10px; top:10px; bottom:auto; transform:none; } }
   body.touch #dicas { display:none; } body.touch .nt { display:none; } body.touch .tt { display:inline; } body.touch p.tt { display:block; }
@@ -134,8 +141,8 @@
 <script src="lib/three.min.js"></script>
 <script src="lib/Pass.js"></script><script src="lib/CopyShader.js"></script><script src="lib/LuminosityHighPassShader.js"></script><script src="lib/GammaCorrectionShader.js"></script>
 <script src="lib/EffectComposer.js"></script><script src="lib/RenderPass.js"></script><script src="lib/ShaderPass.js"></script><script src="lib/UnrealBloomPass.js"></script>
-<script src="js/i18n.js?v=20261121b"></script><script src="js/modelo.js?v=20261121b"></script><script src="js/conteudo.js?v=20261121b"></script><script src="js/fisica.js?v=20261121b"></script><script src="js/sim.js?v=20261121b"></script>
-<script src="js/world.js?v=20261121b"></script><script src="js/paineis.js?v=20261121b"></script><script src="js/maos.js?v=20261121b"></script><script src="js/entrada.js?v=20261121b"></script><script src="js/toque.js?v=20261121b"></script><script src="js/audio.js?v=20261121b"></script>
-<script src="js/main.js?v=20261121b"></script>
+<script src="js/i18n.js?v=20261122b"></script><script src="js/modelo.js?v=20261122b"></script><script src="js/conteudo.js?v=20261122b"></script><script src="js/fisica.js?v=20261122b"></script><script src="js/sim.js?v=20261122b"></script>
+<script src="js/world.js?v=20261122b"></script><script src="js/paineis.js?v=20261122b"></script><script src="js/maos.js?v=20261122b"></script><script src="js/entrada.js?v=20261122b"></script><script src="js/toque.js?v=20261122b"></script><script src="js/audio.js?v=20261122b"></script>
+<script src="js/main.js?v=20261122b"></script>
 </body>
 </html>

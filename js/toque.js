@@ -13,7 +13,7 @@
     + B('bL', 'l1', 'L1', '', 'sm') + B('bR', 'r1', 'R1', '', 'sm')
     + B('bU', 'up', '▲', '', 'sq') + B('bD', 'down', '▼', '', 'sq') + B('bLf', 'left', '◀', '', 'sq') + B('bRt', 'right', '▶', '', 'sq')
     + '<div id="gm">' + B('bMenu', 'options', '☰', 'ajuda', 'pill') + B('bTour', 'touch', '▶', 'apresentação', 'pill') + B('bFoto', 'share', '◉', 'foto', 'pill') + '</div>'
-    + B('bSkip', 'a', '›', 'saltar', 'pill') + B('bTitTour', 'touch', '▶', 'apresentação', 'pill')
+    + F('bZ', 'zoom', '⤢', 'ampliar', 'pill') + B('bSkip', 'a', '›', 'saltar', 'pill') + B('bTitTour', 'touch', '▶', 'apresentação', 'pill')
     + '<div id="gs">' + B('bCont', 'b', '✕', 'continuar', 'pill') + F('bLang', 'lang', '🌐', 'idioma', 'pill') + F('bSom', 'mute', '♪', 'som', 'pill') + F('bFull', 'full', '⛶', 'ecrã inteiro', 'pill') + '</div>';
 
   function ligar() {
@@ -45,7 +45,7 @@
     if (p && p.then) p.then(() => { try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => { }); } catch (e) { } }).catch(() => { });
   }
   function tecla(code) { E.keys[code] = true; setTimeout(() => { E.keys[code] = false; }, 90); }
-  function fn(f) { if (f === 'full') fullscreen(); else if (f === 'lang') tecla('KeyL'); else if (f === 'mute') tecla('KeyM'); }
+  function fn(f) { if (f === 'full') fullscreen(); else if (f === 'lang') tecla('KeyL'); else if (f === 'mute') tecla('KeyM'); else if (f === 'zoom' && E.onZoom) E.onZoom(); }
 
   // ---- botões
   const cont = $('toque');

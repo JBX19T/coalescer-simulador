@@ -18,7 +18,7 @@
   window.__jogo = { S, sim, O, camera, hands };           // para testes
   World.relabel();
 
-  const ovc = $('ovc'), ovx = ovc.getContext('2d');
+  const ovc = $('ovc'), ovx = ovc.getContext('2d'); let ovZoom = 0;
   // ---- pós-processamento (brilho)
   let composer = null, bloom = null, useBloom = Q.get('bloom') !== '0' && !TACTIL;
   function buildComposer() {
@@ -87,16 +87,26 @@
 
   // ---- painéis em tela cheia
   function sizeOv() {
-    const tq = E.toque && E.toque.on, land = innerWidth > innerHeight * 1.05;
+    const tq = E.toque && E.toque.on, land = innerWidth > innerHeight * 1.05, z = tq && estado === 'painel' ? ovZoom : 0;
+    document.body.dataset.z = z;      // 0 normal · 1 painel em ecrã inteiro · 2 painel a 2× (arrasta para ver o resto)
     // táctil: sem a legenda do teclado; na horizontal deixa espaço dos lados para a cruz e os botões
-    const w = innerWidth - 8 - (tq && land && estado !== 'tour' ? 340 : 0), h = innerHeight - (estado === 'tour' ? (tq ? 150 : 250) : (tq ? 54 : 90)); let cw = w, ch = cw * 9 / 16; if (ch > h) { ch = h; cw = ch * 16 / 9; } ovc.width = Math.round(cw * Math.min(devicePixelRatio || 1, 1.25)); ovc.height = Math.round(ch * Math.min(devicePixelRatio || 1, 1.25)); ovc.style.width = cw + 'px'; ovc.style.height = ch + 'px'; }
+    const w = z ? innerWidth - 8 : innerWidth - 8 - (tq && land && estado !== 'tour' ? 384 : 0), h = z ? innerHeight - 8 : innerHeight - (estado === 'tour' ? (tq ? 150 : 250) : (tq ? 54 : 90)); let cw = w, ch = cw * 9 / 16; if (ch > h) { ch = h; cw = ch * 16 / 9; }
+    if (z === 2) { cw *= 2; ch *= 2; }
+    // resolução: no telemóvel desenha-se aos pixéis reais do ecrã (antes ficava a 1,25× e esticada = letras desfocadas); limite de pixéis para não pesar
+    const sc = tq ? Math.max(1, Math.min(devicePixelRatio || 1, 2.5, Math.sqrt(2400000 / (cw * ch)))) : Math.min(devicePixelRatio || 1, 1.25);
+    ovc.width = Math.round(cw * sc); ovc.height = Math.round(ch * sc); ovc.style.width = cw + 'px'; ovc.style.height = ch + 'px';
+    if (z === 2) { const wr = $('ovwrap'); wr.scrollLeft = (wr.scrollWidth - wr.clientWidth) / 2; wr.scrollTop = (wr.scrollHeight - wr.clientHeight) / 2; }
+  }
+  let zT = 0;
+  E.onZoom = () => { if (estado !== 'painel') return; zT = performance.now(); ovZoom = (ovZoom + 1) % 3; sizeOv(); Som.tick(); };
+  ovc.addEventListener('click', () => { if (E.toque && E.toque.on && performance.now() - zT > 600) E.onZoom(); });      // tocar no painel também alterna a ampliação (ignora o clique que sobra do toque no botão, que muda de sítio)
   function legendaOv() {
     const pad = padMode(), k = (a, b) => '<kbd>' + (pad ? a : b) + '</kbd>';
     $('ovleg').innerHTML = k('L1', 'Z') + '/' + k('R1', 'C') + ' ' + tr('painel') + ' · ' + k('↑↓', '↑↓') + ' ' + tr('escolher') + ' · ' + k('◀▶', '←→') + ' ' + tr('ajustar') + ' · ' + k('□', 'R') + ' ' + tr('liga/desliga método') + ' · ' + k('Share', 'F2') + ' ' + tr('foto') + ' · ' + k('○', 'Backspace') + ' ' + tr('fechar');
     $('ovtabs').innerHTML = P.LISTA.map((p, i) => '<span class="' + (p.id === ovId ? 'on' : '') + '">' + (i + 1) + ' · ' + tr(p.nome) + '</span>').join('');
   }
   function showOv(id) { ovId = id; $('ov').classList.add('show'); const t = estado === 'tour'; $('ovtabs').style.display = t ? 'none' : 'flex'; $('ovleg').style.display = t ? 'none' : ''; sizeOv(); }
-  function hideOv() { ovId = null; $('ov').classList.remove('show'); }
+  function hideOv() { ovId = null; ovZoom = 0; document.body.dataset.z = 0; $('ov').classList.remove('show'); }
   function abrirPainel(id) { showOv(id); estado = 'painel'; if (document.pointerLockElement) document.exitPointerLock(); M[id] = true; legendaOv(); Som.ok(); tabletUp = false; $('hud').style.display = 'none'; }
   function fecharPainel() { hideOv(); estado = 'livre'; $('hud').style.display = ''; Som.back(); dicasLivre(); }
   function ciclo(dir) { const i = P.LISTA.findIndex((p) => p.id === ovId); const j = (i + dir + P.LISTA.length) % P.LISTA.length; ovId = P.LISTA[j].id; M[ovId] = true; legendaOv(); Som.tick(); }
